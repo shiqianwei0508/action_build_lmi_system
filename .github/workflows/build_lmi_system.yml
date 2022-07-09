@@ -90,7 +90,7 @@ jobs:
             md5=$(md5sum "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip)
             zipmd5=${md5:0:10}
             mv "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_"$date"_$zipmd5.zip
-            echo "artifact_name=miui_LMIPRE_"$date"_$zipmd5.zip" >> $GITHUB_ENV
+            echo "artifact_name=miui_LMIPRE_"$date"_$zipmd5" >> $GITHUB_ENV
        - name: 6.上传到Artifact
          uses: actions/upload-artifact@v2
          with:
