@@ -92,10 +92,10 @@ jobs:
             mv "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_"$date"_$zipmd5.zip
             echo "artifact_name=miui_LMIPRE_"$date"_$zipmd5" >> $GITHUB_ENV
        - name: 6.上传到Artifact
-         uses: actions/upload-artifact@v2
+         uses: actions/upload-artifact@v3
          with:
           name: ${{ env.artifact_name }}
-          path: "./zip/*"
+          path: "./zip/miui_LMIPRE_"$date"_$zipmd5.zip"
        - name: 7.删除工作流运行
          uses: Mattraks/delete-workflow-runs@v2
          with:
