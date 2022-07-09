@@ -1,0 +1,9 @@
+ota-property-files=metadata:69:303,metadata.pb:440:181                 
+ota-required-cache=0
+ota-type=BLOCK
+post-build=Redmi/lmi/lmi:12/RKQ1.211001.001/22.7.7:user/release-keys
+post-build-incremental=22.7.7
+post-sdk-level=31
+post-security-patch-level=2022-07-01
+post-timestamp=1657125921
+pre-device=lmi

@@ -1,0 +1,105 @@
+name: build_lmi_system
+on: 
+  workflow_dispatch:
+    inputs:
+      URL:
+        description: '待操作的系统包下载地址'     
+        required: true
+        default: 'https://bigota.d.miui.com/22.7.7/miui_PSYCHEPRE_22.7.7_a83dac045c_12.0.zip'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+       - uses: actions/checkout@master  
+       - name: 1.安装依赖
+         run: |
+            sudo apt install python3 python3-pip aria2 zip p7zip-full
+            sudo apt --fix-broken install
+            sudo apt update --fix-missing
+            pip3 install --upgrade pip
+            pip3 install pycryptodome
+            pip3 install docopt
+            pip3 install requests
+            pip3 install beautifulsoup4
+            pip3 install --ignore-installed pyyaml
+       - name: 2.下载系统包
+         run: aria2c -x16 -j$(nproc) -U "Mozilla/5.0" -d "$GITHUB_WORKSPACE" ${{ github.event.inputs.URL }}
+       - name: 3.解包
+         run: |
+            sudo chmod 777 "$GITHUB_WORKSPACE"/tools/payload-dumper-go
+            mkdir -p "$GITHUB_WORKSPACE"/tmp
+            mkdir -p "$GITHUB_WORKSPACE"/images
+            mkdir -p "$GITHUB_WORKSPACE"/simages
+            mkdir -p "$GITHUB_WORKSPACE"/zip
+            URL=${{ github.event.inputs.URL }}
+            ZIP_NAME=${URL##*/}
+            7z x "$GITHUB_WORKSPACE"/$ZIP_NAME -r -o"$GITHUB_WORKSPACE"/tmp
+            rm -rf "$GITHUB_WORKSPACE"/$ZIP_NAME
+            for i in system product system_ext; do
+                "$GITHUB_WORKSPACE"/tools/payload-dumper-go -p $i "$GITHUB_WORKSPACE"/tmp/payload.bin
+                mv "$GITHUB_WORKSPACE"/payload/$i.img "$GITHUB_WORKSPACE"/images/$i.img
+            done
+            rm -rf "$GITHUB_WORKSPACE"/payload
+            rm -rf "$GITHUB_WORKSPACE"/tmp
+            sudo python3 "$GITHUB_WORKSPACE"/tools/imgextractorLinux.py "$GITHUB_WORKSPACE"/images/product.img "$GITHUB_WORKSPACE"/images
+            rm -rf "$GITHUB_WORKSPACE"/images/product.img
+       - name: 4.替换相关文件
+         run: |
+            sudo rm -rf "$GITHUB_WORKSPACE"/images/product/etc/device_features/*
+            sudo cp -f "$GITHUB_WORKSPACE"/lmi.xml "$GITHUB_WORKSPACE"/images/product/etc/device_features/
+            sudo cp -f "$GITHUB_WORKSPACE"/lmipro.xml "$GITHUB_WORKSPACE"/images/product/etc/device_features/
+       - name: 5.打包
+         run: |
+            sudo chmod 777 "$GITHUB_WORKSPACE"/tools/mke2fs
+            sudo chmod 777 "$GITHUB_WORKSPACE"/tools/e2fsdroid
+            sudo chmod 777 "$GITHUB_WORKSPACE"/tools/img2simg
+            sudo chmod 777 "$GITHUB_WORKSPACE"/tools/brotli
+            URL=${{ github.event.inputs.URL }}
+            DATE=${URL%/*}
+            date=${DATE##*/}
+            product_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/product | awk {'print $1'})
+            product_size=$(echo "$product_size + 52428800" | bc)
+            product_size=$(echo "$product_size / 4096" | bc)
+            system_size=$(du -sb "$GITHUB_WORKSPACE"/images/system.img | awk {'print $1'})
+            system_ext_size=$(du -sb "$GITHUB_WORKSPACE"/images/system_ext.img | awk {'print $1'})
+            UTC=$(date -u +%s)
+            sudo python3 "$GITHUB_WORKSPACE"/tools/fspatch.py "$GITHUB_WORKSPACE"/images/product "$GITHUB_WORKSPACE"/images/TI_config/product_fs_config
+            "$GITHUB_WORKSPACE"/tools/mke2fs -O ^has_journal -L product -I 256 -M /product -m 0 -t ext4 -b 4096 "$GITHUB_WORKSPACE"/images/product.img $product_size
+            sudo "$GITHUB_WORKSPACE"/tools/e2fsdroid -e -T $UTC -C "$GITHUB_WORKSPACE"/images/TI_config/product_fs_config -S "$GITHUB_WORKSPACE"/images/TI_config/product_file_contexts -f "$GITHUB_WORKSPACE"/images/product -a /product "$GITHUB_WORKSPACE"/images/product.img
+            resize2fs -f -M "$GITHUB_WORKSPACE"/images/product.img
+            sudo rm -rf "$GITHUB_WORKSPACE"/images/TI_config
+            product_size=$(du -sb "$GITHUB_WORKSPACE"/images/product.img | awk {'print $1'})
+            sudo rm -rf "$GITHUB_WORKSPACE"/images/product
+            for i in system product system_ext; do
+                "$GITHUB_WORKSPACE"/tools/img2simg "$GITHUB_WORKSPACE"/images/$i.img "$GITHUB_WORKSPACE"/simages/$i.img
+                rm -rf "$GITHUB_WORKSPACE"/images/$i.img
+                python3 "$GITHUB_WORKSPACE"/tools/img2sdat.py "$GITHUB_WORKSPACE"/simages/$i.img -o "$GITHUB_WORKSPACE"/simages/ -v 4 -p $i
+                rm -rf "$GITHUB_WORKSPACE"/simages/$i.img
+                "$GITHUB_WORKSPACE"/tools/brotli -q 5 "$GITHUB_WORKSPACE"/simages/$i.new.dat -o "$GITHUB_WORKSPACE"/images/$i.new.dat.br
+                mv "$GITHUB_WORKSPACE"/simages/$i.transfer.list "$GITHUB_WORKSPACE"/simages/$i.patch.dat "$GITHUB_WORKSPACE"/images
+                rm -rf "$GITHUB_WORKSPACE"/simages/$i.new.dat
+            done
+            rm -rf "$GITHUB_WORKSPACE"/simages
+            cp -r "$GITHUB_WORKSPACE"/META-INF "$GITHUB_WORKSPACE"/images
+            cp -f "$GITHUB_WORKSPACE"/dynamic_partitions_op_list "$GITHUB_WORKSPACE"/images
+            sed -i "s/system_size/$system_size/g" "$GITHUB_WORKSPACE"/images/dynamic_partitions_op_list
+            sed -i "s/product_size/$product_size/g" "$GITHUB_WORKSPACE"/images/dynamic_partitions_op_list
+            sed -i "s/system_ext_size/$system_ext_size/g" "$GITHUB_WORKSPACE"/images/dynamic_partitions_op_list
+            7z a "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip "$GITHUB_WORKSPACE"/images/*
+            rm -rf "$GITHUB_WORKSPACE"/images
+            md5=$(md5sum "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip)
+            zipmd5=${md5:0:10}
+            mv "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_$date.zip "$GITHUB_WORKSPACE"/zip/miui_LMIPRE_"$date"_$zipmd5.zip
+            echo "artifact_name=miui_LMIPRE_"$date"_$zipmd5.zip" >> $GITHUB_ENV
+       - name: 6.上传到Artifact
+         uses: actions/upload-artifact@v2
+         with:
+          name: ${{ env.artifact_name }}
+          path: "./zip/*"
+       - name: 7.删除工作流运行
+         uses: Mattraks/delete-workflow-runs@v2
+         with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0

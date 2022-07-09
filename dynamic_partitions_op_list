@@ -1,0 +1,6 @@
+# Grow partition system
+resize system system_size
+# Grow partition product
+resize product product_size
+# Grow partition system_ext
+resize system_ext system_ext_size

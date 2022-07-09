@@ -1,0 +1,32 @@
+getprop("ro.product.device") == "lmi" || abort("E3004: This package is for \"lmi\" devices; this is a \"" + getprop("ro.product.device") + "\".");
+
+# --- Start patching dynamic partitions ---
+
+# Update dynamic partition metadata
+
+assert(update_dynamic_partitions(package_extract_file("dynamic_partitions_op_list")));
+
+# Patch partition system
+
+ui_print("Patching system image unconditionally...");
+show_progress(0.333333, 0);
+block_image_update(map_partition("system"), package_extract_file("system.transfer.list"), "system.new.dat.br", "system.patch.dat") ||
+  abort("E1001: Failed to update system image.");
+
+# Patch partition product
+
+ui_print("Patching product image unconditionally...");
+show_progress(0.333333, 0);
+block_image_update(map_partition("product"), package_extract_file("product.transfer.list"), "product.new.dat.br", "product.patch.dat") ||
+  abort("E2001: Failed to update product image.");
+
+# Patch partition system_ext
+
+ui_print("Patching system_ext image unconditionally...");
+show_progress(0.333334, 0);
+block_image_update(map_partition("system_ext"), package_extract_file("system_ext.transfer.list"), "system_ext.new.dat.br", "system_ext.patch.dat") ||
+  abort("E2001: Failed to update system_ext image.");
+
+# --- End patching dynamic partitions ---
+
+set_progress(1.000000);
