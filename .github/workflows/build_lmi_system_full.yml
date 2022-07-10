@@ -85,7 +85,7 @@ jobs:
             sudo cp -f "$GITHUB_WORKSPACE"/LMI/boot.img "$GITHUB_WORKSPACE"/images
             sudo cp -r "$GITHUB_WORKSPACE"/META-INF "$GITHUB_WORKSPACE"/images
             sudo cp -f "$GITHUB_WORKSPACE"/dynamic_partitions_op_list "$GITHUB_WORKSPACE"/images
-            sudo mv "$GITHUB_WORKSPACE"/LMI/* "$GITHUB_WORKSPACE"/images
+            sudo cp -r "$GITHUB_WORKSPACE"/LMI/* "$GITHUB_WORKSPACE"/images
             sudo rm -rf "$GITHUB_WORKSPACE"/LMI
        - name: 5.打包
          run: |
