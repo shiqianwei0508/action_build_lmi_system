@@ -95,7 +95,7 @@ jobs:
          uses: actions/upload-artifact@v3
          with:
           name: ${{ env.artifact_name }}
-          path: "./zip/miui_LMIPRE_"$date"_$zipmd5.zip"
+          path: ./zip/miui_LMIPRE_"$date"_$zipmd5.zip
        - name: 7.删除工作流运行
          uses: Mattraks/delete-workflow-runs@v2
          with:
