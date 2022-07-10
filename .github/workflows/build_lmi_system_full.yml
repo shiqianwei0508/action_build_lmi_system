@@ -1,4 +1,4 @@
-name: build_lmi_system
+name: build_lmi_system_full
 on: 
   workflow_dispatch:
     inputs:
