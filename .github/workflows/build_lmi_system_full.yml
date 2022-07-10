@@ -113,7 +113,7 @@ jobs:
                 sudo rm -rf "$GITHUB_WORKSPACE"/images/$i
             done
             sudo rm -rf "$GITHUB_WORKSPACE"/images/TI_config
-            for i in product vendor
+            for i in product system system_ext vendor
             do
                 "$GITHUB_WORKSPACE"/tools/img2simg "$GITHUB_WORKSPACE"/images/$i.img "$GITHUB_WORKSPACE"/simages/$i.img
                 rm -rf "$GITHUB_WORKSPACE"/images/$i.img
