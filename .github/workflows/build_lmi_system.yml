@@ -105,9 +105,9 @@ jobs:
             UTC=$(date -u +%s)
             for i in product vendor
             do
-                sudo python3 "$GITHUB_WORKSPACE"/tools/fspatch.py "$GITHUB_WORKSPACE"/images/$i "$GITHUB_WORKSPACE"/images/TI_config/$i_fs_config
+                sudo python3 "$GITHUB_WORKSPACE"/tools/fspatch.py "$GITHUB_WORKSPACE"/images/$i "$GITHUB_WORKSPACE"/images/TI_config/"$i"_fs_config
                 "$GITHUB_WORKSPACE"/tools/mke2fs -O ^has_journal -L $i -I 256 -M /$i -m 0 -t ext4 -b 4096 "$GITHUB_WORKSPACE"/images/$i.img $(eval echo "$"$i"_size")
-                sudo "$GITHUB_WORKSPACE"/tools/e2fsdroid -e -T $UTC -C "$GITHUB_WORKSPACE"/images/TI_config/$i_fs_config -S "$GITHUB_WORKSPACE"/images/TI_config/$i_file_contexts -f "$GITHUB_WORKSPACE"/images/$i -a /$i "$GITHUB_WORKSPACE"/images/$i.img
+                sudo "$GITHUB_WORKSPACE"/tools/e2fsdroid -e -T $UTC -C "$GITHUB_WORKSPACE"/images/TI_config/"$i"_fs_config -S "$GITHUB_WORKSPACE"/images/TI_config/"$i"_file_contexts -f "$GITHUB_WORKSPACE"/images/$i -a /$i "$GITHUB_WORKSPACE"/images/$i.img
                 resize2fs -f -M "$GITHUB_WORKSPACE"/images/$i.img
                 eval "$i"_size=$(du -sb "$GITHUB_WORKSPACE"/images/$i.img | awk {'print $1'})
                 sudo rm -rf "$GITHUB_WORKSPACE"/images/$i
