@@ -5,7 +5,7 @@ on:
       URL:
         description: '待操作的系统包下载地址'     
         required: true
-        default: 'https://bigota.d.miui.com/22.7.7/miui_PSYCHEPRE_22.7.7_a83dac045c_12.0.zip'
+        default: 'https://hugeota.d.miui.com/22.7.7/miui_PSYCHEPRE_22.7.7_a83dac045c_12.0.zip'
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -25,7 +25,7 @@ jobs:
        - name: 2.下载系统包
          run: |
             aria2c -x16 -j$(nproc) -U "Mozilla/5.0" -d "$GITHUB_WORKSPACE" ${{ github.event.inputs.URL }}
-            aria2c -x16 -j$(nproc) -U "Mozilla/5.0" -d "$GITHUB_WORKSPACE" https://bigota.d.miui.com/22.7.7/miui_LMIPRE_22.7.7_25f68fde92_12.0.zip
+            aria2c -x16 -j$(nproc) -U "Mozilla/5.0" -d "$GITHUB_WORKSPACE" https://hugeota.d.miui.com/22.7.13/miui_LMIPRE_22.7.13_211005c653_12.0.zip
        - name: 3.解包
          run: |
             sudo chmod 777 "$GITHUB_WORKSPACE"/tools/payload-dumper-go
@@ -40,7 +40,7 @@ jobs:
             ZIP_NAME_PSYCHE=${URL##*/}
             7z x "$GITHUB_WORKSPACE"/$ZIP_NAME_PSYCHE -r -o"$GITHUB_WORKSPACE"/PSYCHE
             rm -rf "$GITHUB_WORKSPACE"/$ZIP_NAME_PSYCHE
-            ZIP_NAME_LMI=miui_LMIPRE_22.7.7_25f68fde92_12.0.zip
+            ZIP_NAME_LMI=miui_LMIPRE_22.7.13_211005c653_12.0.zip
             7z x "$GITHUB_WORKSPACE"/$ZIP_NAME_LMI -r -o"$GITHUB_WORKSPACE"/LMI firmware-update
             7z x "$GITHUB_WORKSPACE"/$ZIP_NAME_LMI -r -o"$GITHUB_WORKSPACE"/LMI boot.img
             for i in odm vendor
