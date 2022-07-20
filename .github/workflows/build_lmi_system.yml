@@ -98,7 +98,7 @@ jobs:
             DATE=${URL%/*}
             date=${DATE##*/}
             product_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/product | awk {'print $1'})
-            product_size=$(echo "$product_size + 1048576" | bc)
+            product_size=$(echo "$product_size + 10485760" | bc)
             product_size=$(echo "$product_size / 4096" | bc)
             vendor_size=$(echo "${{ env.vendor_size }} / 4096" | bc)
             system_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/system.img | awk {'print $1'})
