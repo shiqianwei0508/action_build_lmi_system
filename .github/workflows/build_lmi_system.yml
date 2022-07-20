@@ -55,7 +55,6 @@ jobs:
             rm -rf "$GITHUB_WORKSPACE"/LMI/vendor.patch.dat
             rm -rf "$GITHUB_WORKSPACE"/LMI/vendor.transfer.list
             rm -rf "$GITHUB_WORKSPACE"/LMI/vendor.new.dat
-            echo "vendor_size=$(sudo du -sb "$GITHUB_WORKSPACE"/LMI/vendor.img | awk {'print $1'})" >> $GITHUB_ENV
             sudo python3 "$GITHUB_WORKSPACE"/tools/imgextractorLinux.py "$GITHUB_WORKSPACE"/LMI/vendor.img "$GITHUB_WORKSPACE"/LMI
             rm -rf "$GITHUB_WORKSPACE"/LMI/vendor.img
             for i in system product system_ext
@@ -98,11 +97,11 @@ jobs:
             DATE=${URL%/*}
             date=${DATE##*/}
             product_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/product | awk {'print $1'})
-            product_size=$(echo "$product_size + 10485760" | bc)
+            product_size=$(echo "$product_size + 52428800" | bc)
             product_size=$(echo "$product_size / 4096" | bc)
-            vendor_size=$(echo "${{ env.vendor_size }} / 4096" | bc)
-            system_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/system.img | awk {'print $1'})
-            system_ext_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/system_ext.img | awk {'print $1'})
+            vendor_size=$(sudo du -sb "$GITHUB_WORKSPACE"/images/vendor | awk {'print $1'})
+            vendor_size=$(echo "$vendor_size + 52428800" | bc)
+            vendor_size=$(echo "$vendor_size / 4096" | bc)
             UTC=$(date -u +%s)
             for i in product vendor
             do
